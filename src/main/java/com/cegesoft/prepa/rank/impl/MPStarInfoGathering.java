@@ -32,7 +32,7 @@ public class MPStarInfoGathering extends InfoGathering {
                 .addQuestion(new ButtonQuestion("En quelle année es-tu ?")
                         .addAnswer("3/2", null, ButtonStyle.PRIMARY, this.addRole(1009760616292028456L))
                         .addAnswer("5/2", null, ButtonStyle.PRIMARY, this.addRole(1009760682520104990L))
-                        .addAnswer("7/2", Emoji.fromUnicode("\uD83D\uDE36"), ButtonStyle.DANGER, true, str -> {})
+                        .addAnswer("7/2", Emoji.fromUnicode("\uD83D\uDE36"), ButtonStyle.DANGER)
                 );
     }
 

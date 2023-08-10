@@ -9,8 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TaskManager {
 
-    private final HashMap<TaskId, Task> taskHistory = new HashMap<>();
-
     private final ConcurrentHashMap<TaskId, Task> tasks = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<TaskId, Date> program = new ConcurrentHashMap<>();
     private Thread thread;
@@ -38,7 +36,6 @@ public class TaskManager {
                     }
                     launched.forEach(program::remove);
                     this.tasks.entrySet().stream().filter(entry -> entry.getValue().getInfo().getState() == Task.TaskState.INTERRUPT).forEach(entry -> {
-                        this.taskHistory.put(entry.getKey(), this.tasks.get(entry.getKey()));
                         this.tasks.remove(entry.getKey());
                     });
                     Thread.sleep(100);
@@ -54,7 +51,7 @@ public class TaskManager {
     public static Task getTask(TaskId id) {
         if (id == null)
             return null;
-        return Main.taskManager.tasks.getOrDefault(id, Main.taskManager.taskHistory.getOrDefault(id, null));
+        return Main.taskManager.tasks.getOrDefault(id, null);
     }
 
     public static TaskInfo getTaskInfo(TaskId id) {

@@ -29,12 +29,16 @@ public class ButtonQuestion implements IQuestion {
         this.question = question;
     }
 
-    public ButtonQuestion addAnswer(String s, Emoji emoji, ButtonStyle style, boolean fake, Consumer<String> result) {
+    private ButtonQuestion addAnswer(String s, Emoji emoji, ButtonStyle style, boolean fake, Consumer<String> result) {
         UUID uuid = UUID.randomUUID();
         actionRows.add(Button.of(style, uuid.toString(), s, emoji));
         if (!fake)
             answerList.put(uuid.toString(), result);
         return this;
+    }
+
+    public ButtonQuestion addAnswer(String s, Emoji emoji, ButtonStyle style) {
+        return this.addAnswer(s, emoji, style, true, str -> {});
     }
     @Override
     public ButtonQuestion addAnswer(String s, Emoji emoji, ButtonStyle style, Consumer<String> result) {

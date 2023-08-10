@@ -6,6 +6,7 @@ import com.cegesoft.prepa.quote.QuoteManager;
 import com.cegesoft.prepa.rank.InfoGathering;
 import com.cegesoft.prepa.rank.RankManager;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.User;
 
 import java.io.IOException;
 
@@ -14,16 +15,19 @@ public class Server {
     private final long channelId;
     private final String serverId;
     private final int options;
+    private final long adminId;
+    private User admin;
 
     private QuoteManager quoteManager;
     private PercentManager percentManager;
     private RankManager<?> rankManager;
 
 
-    public Server(long channelId, String serverId, int options) {
+    public Server(long channelId, String serverId, int options, long adminId) {
         this.channelId = channelId;
         this.serverId = serverId;
         this.options = options;
+        this.adminId = adminId;
         if (Options.hasOption(this.options, Options.QUOTES)) {
             this.quoteManager = new QuoteManager(this);
         }
@@ -32,8 +36,8 @@ public class Server {
         }
     }
 
-    public Server(long channelId, String serverId, int options, Class<? extends InfoGathering> rankClass) {
-        this(channelId, serverId, options | Options.RANKS);
+    public Server(long channelId, String serverId, int options, long adminId, Class<? extends InfoGathering> rankClass) {
+        this(channelId, serverId, options | Options.RANKS, adminId);
         this.rankManager = new RankManager<>(this, rankClass);
     }
 
@@ -69,6 +73,7 @@ public class Server {
         if (Options.hasOption(this.options, Options.PERCENT)) {
             this.percentManager.postLoad();
         }
+        Main.jda.retrieveUserById(adminId).queue(user -> this.admin = user);
     }
 
     public long getChannelId() {
@@ -81,6 +86,10 @@ public class Server {
 
     public Guild getGuild() {
         return Main.jda.getGuildById(serverId);
+    }
+
+    public void sendWarnMessage(String message) {
+        this.admin.openPrivateChannel().queue(channel -> channel.sendMessage(message).queue());
     }
 
     public static class Options {

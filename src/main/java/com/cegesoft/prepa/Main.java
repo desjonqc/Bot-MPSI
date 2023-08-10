@@ -1,5 +1,6 @@
 package com.cegesoft.prepa;
 
+import com.cegesoft.prepa.rank.impl.BDEInfoGathering;
 import com.cegesoft.prepa.rank.impl.MPStarInfoGathering;
 import com.cegesoft.prepa.server.Server;
 import com.cegesoft.prepa.task.TaskManager;
@@ -27,9 +28,10 @@ public class Main {
         taskManager = new TaskManager();
         taskManager.start();
 
-        servers.put("883398835341234196", new Server(893245958345875537L, "883398835341234196", Server.Options.EASTER_EGG | Server.Options.PERCENT | Server.Options.QUOTES));
-        servers.put("1009757451123441794", new Server(1009806815984369664L, "1009757451123441794", Server.Options.QUOTES | Server.Options.EASTER_EGG, MPStarInfoGathering.class));
-        servers.put("1014815107756326993", new Server(1014856042523406397L, "1014815107756326993", Server.Options.QUOTES));
+        servers.put("883398835341234196", new Server(893245958345875537L, "883398835341234196", Server.Options.EASTER_EGG | Server.Options.PERCENT | Server.Options.QUOTES, 243450577953095680L));
+        servers.put("1009757451123441794", new Server(1009806815984369664L, "1009757451123441794", Server.Options.QUOTES | Server.Options.EASTER_EGG, 243450577953095680L, MPStarInfoGathering.class));
+        servers.put("1014815107756326993", new Server(1014856042523406397L, "1014815107756326993", Server.Options.QUOTES, 243450577953095680L));
+        servers.put("1139231004867964928", new Server(1139231005312553101L, "1139231004867964928", 0, 243450577953095680L, BDEInfoGathering.class));
 
         for (Server server : servers.values()) {
             server.preLoad();

@@ -41,6 +41,9 @@ public abstract class InfoGathering {
             ).build();
             this.channel.sendMessage(message).queue();
             this.nextQuestion(null);
+        }, error -> {
+            this.server.sendWarnMessage("Impossible d'envoyer un message privé à " + this.user.getName() + " pour le questionnaire.");
+            this.server.getRankManager().stopInfoGathering(this);
         });
     }
 
@@ -76,6 +79,12 @@ public abstract class InfoGathering {
     protected Consumer<String> addRole(long role) {
         return str -> {
             this.server.getGuild().addRoleToMember(user.getId(), server.getGuild().getRoleById(role)).queue();
+        };
+    }
+
+    protected Consumer<String> skipQuestions(int questionToSkip) {
+        return str -> {
+            this.questionIndex += questionToSkip;
         };
     }
 
