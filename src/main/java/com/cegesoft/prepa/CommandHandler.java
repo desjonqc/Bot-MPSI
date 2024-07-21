@@ -12,6 +12,9 @@ public class CommandHandler {
     private Command percentCommand;
     private Command percentAdminCommand;
 
+    private Command godfatherCommand;
+    private Command godfatherAdminCommand;
+
     private Command timeCommand;
 
     public void registerCommand() {
@@ -25,6 +28,12 @@ public class CommandHandler {
         percentAdminCommand = Main.jda.upsertCommand("apourcent", "Gère les pourcentages de M. Jung.").addSubcommands(new SubcommandData("add", "Ajoute un pourcentage").addOption(OptionType.INTEGER, "valeur", "Le pourcentage").addOption(OptionType.STRING, "eleve", "L'élève").addOption(OptionType.INTEGER, "ds", "Le DS concerné"))
                 .addSubcommands(new SubcommandData("remove", "Supprime un pourcentage de M. Jung.").addOption(OptionType.INTEGER, "id", "Identifiant de l'entrée")).complete();
         timeCommand = Main.jda.upsertCommand("donnelheure", "Donne l'heure à quelqu'un").addOption(OptionType.USER, "à", "A qui ?").complete();
+        godfatherCommand = Main.jda.upsertCommand("parrain", "Gère les parrains")
+                .addSubcommands(new SubcommandData("ajouter_groupe", "Ajoute un groupe de parrains").addOption(OptionType.STRING, "parrains", "Le prénom puis le nom des parrains séparés par ; (exemple : 'Jean Dupont;Clara Smith;...') (MAX 4)"))
+                .addSubcommands(new SubcommandData("supp_groupe", "Supprime un groupe de parrains").addOption(OptionType.STRING, "parrain", "Le prénom puis le nom d'un parrain présent dans le groupe (exemple : 'Jean Dupont')"))
+                .addSubcommands(new SubcommandData("info", "Affiche les informations d'un groupe").addOption(OptionType.STRING, "parrain", "Le prénom puis le nom d'un parrain présent dans le groupe (exemple : 'Jean Dupont')"))
+                .addSubcommands(new SubcommandData("ajouter_filleul", "Ajoute des filleuls à un groupe de parrains").addOption(OptionType.STRING, "parrain", "Le prénom puis le nom d'un parrain présent dans le groupe (exemple : 'Jean Dupont')").addOption(OptionType.STRING, "filleuls", "Le prénom puis le nom des filleuls séparés par ; (exemple : 'Jean Dupont;Clara Smith;...') (MAX 4)")).complete();
+        godfatherAdminCommand = Main.jda.upsertCommand("parrain_csv", "Convertit les parrains en CSV").complete();
     }
 
     public Command getQuoteCommand() {
@@ -45,5 +54,13 @@ public class CommandHandler {
 
     public Command getTimeCommand() {
         return timeCommand;
+    }
+
+    public Command getGodfatherCommand() {
+        return godfatherCommand;
+    }
+
+    public Command getGodfatherAdminCommand() {
+        return godfatherAdminCommand;
     }
 }

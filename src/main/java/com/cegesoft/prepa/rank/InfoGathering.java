@@ -20,6 +20,8 @@ public abstract class InfoGathering {
     protected PrivateChannel channel;
     private int questionIndex = -1;
 
+    private InfoGathering nextInfoGathering;
+
     public InfoGathering(Server server, User user) {
         this.user = user;
         this.server = server;
@@ -36,14 +38,15 @@ public abstract class InfoGathering {
     public void start() {
         this.user.openPrivateChannel().queue(channel -> {
             this.channel = channel;
-            Message message = new MessageBuilder().setEmbed(
-                    new EmbedBuilder().setColor(Color.GREEN).setTitle("QUESTIONNAIRE").setDescription(getPresentationMessage()).build()
-            ).build();
-            this.channel.sendMessage(message).queue();
-            this.nextQuestion(null);
-        }, error -> {
-            this.server.sendWarnMessage("Impossible d'envoyer un message privé à " + this.user.getName() + " pour le questionnaire.");
-            this.server.getRankManager().stopInfoGathering(this);
+            if (this.getPresentationMessage() != null) {
+                Message message = new MessageBuilder().setEmbed(
+                        new EmbedBuilder().setColor(Color.GREEN).setTitle("QUESTIONNAIRE").setDescription(getPresentationMessage()).build()
+                ).build();
+                this.channel.sendMessage(message).queue(msg -> this.nextQuestion(null), error -> {
+                    this.server.sendWarnMessage("Impossible d'envoyer un message privé à " + this.user.getName() + " pour le questionnaire.");
+                    this.server.getRankManager().stopInfoGathering(this);
+                });
+            }
         });
     }
 
@@ -65,6 +68,8 @@ public abstract class InfoGathering {
         if (this.questionIndex >= this.questions.size()) {
             this.channel.sendMessage(new MessageBuilder().setEmbed(new EmbedBuilder().setColor(Color.GREEN).setTitle("TERMINÉ !").setDescription(getConclusionMessage()).build()).build()).queue();
             this.server.getRankManager().stopInfoGathering(this);
+            if (this.nextInfoGathering != null)
+                this.server.getRankManager().startNewGathering(this.user, this.nextInfoGathering);
             return;
         }
         Message message = this.questions.get(questionIndex).build(new EmbedBuilder().setColor(Color.ORANGE).setTitle("Question " + (questionIndex + 1) + " / " + questions.size() + " :")).build();
@@ -92,4 +97,11 @@ public abstract class InfoGathering {
         return this.questions.get(this.questionIndex);
     }
 
+    public InfoGathering getNextInfoGathering() {
+        return nextInfoGathering;
+    }
+
+    public void setNextInfoGathering(InfoGathering nextInfoGathering) {
+        this.nextInfoGathering = nextInfoGathering;
+    }
 }

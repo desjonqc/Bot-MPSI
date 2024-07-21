@@ -1,10 +1,11 @@
 package com.cegesoft.prepa.server;
 
 import com.cegesoft.prepa.Main;
+import com.cegesoft.prepa.godfather.GodFatherManager;
 import com.cegesoft.prepa.percent.PercentManager;
 import com.cegesoft.prepa.quote.QuoteManager;
 import com.cegesoft.prepa.rank.InfoGathering;
-import com.cegesoft.prepa.rank.RankManager;
+import com.cegesoft.prepa.rank.InfoGatheringManager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 
@@ -20,8 +21,8 @@ public class Server {
 
     private QuoteManager quoteManager;
     private PercentManager percentManager;
-    private RankManager<?> rankManager;
-
+    private InfoGatheringManager infoGatheringManager;
+    private GodFatherManager godFatherManager;
 
     public Server(long channelId, String serverId, int options, long adminId) {
         this.channelId = channelId;
@@ -34,11 +35,14 @@ public class Server {
         if (Options.hasOption(this.options, Options.PERCENT)) {
             this.percentManager = new PercentManager(this);
         }
+        if (Options.hasOption(this.options, Options.GODFATHER)) {
+            this.godFatherManager = new GodFatherManager(this);
+        }
     }
 
     public Server(long channelId, String serverId, int options, long adminId, Class<? extends InfoGathering> rankClass) {
         this(channelId, serverId, options | Options.RANKS, adminId);
-        this.rankManager = new RankManager<>(this, rankClass);
+        this.infoGatheringManager = new InfoGatheringManager(this, rankClass);
     }
 
     public QuoteManager getQuoteManager() {
@@ -49,8 +53,12 @@ public class Server {
         return percentManager;
     }
 
-    public RankManager<?> getRankManager() {
-        return rankManager;
+    public InfoGatheringManager getRankManager() {
+        return infoGatheringManager;
+    }
+
+    public GodFatherManager getGodFatherManager() {
+        return godFatherManager;
     }
 
     public String getId() {
@@ -64,6 +72,12 @@ public class Server {
         if (Options.hasOption(this.options, Options.PERCENT)) {
             this.percentManager.preLoad();
         }
+        if (Options.hasOption(this.options, Options.RANKS)) {
+            this.infoGatheringManager.preLoad();
+        }
+        if (Options.hasOption(this.options, Options.GODFATHER)) {
+            this.godFatherManager.preLoad();
+        }
     }
 
     public void postLoad() {
@@ -72,6 +86,12 @@ public class Server {
         }
         if (Options.hasOption(this.options, Options.PERCENT)) {
             this.percentManager.postLoad();
+        }
+        if (Options.hasOption(this.options, Options.RANKS)) {
+            this.infoGatheringManager.postLoad();
+        }
+        if (Options.hasOption(this.options, Options.GODFATHER)) {
+            this.godFatherManager.postLoad();
         }
         Main.jda.retrieveUserById(adminId).queue(user -> this.admin = user);
     }
@@ -92,11 +112,16 @@ public class Server {
         this.admin.openPrivateChannel().queue(channel -> channel.sendMessage(message).queue());
     }
 
+    public long getAdminId() {
+        return adminId;
+    }
+
     public static class Options {
-        public static final int EASTER_EGG = 0b0001;
-        public static final int PERCENT = 0b0010;
-        public static final int QUOTES = 0b0100;
-        public static final int RANKS = 0b1000;
+        public static final int EASTER_EGG = 0b00001;
+        public static final int PERCENT = 0b00010;
+        public static final int QUOTES = 0b00100;
+        public static final int RANKS = 0b01000;
+        public static final int GODFATHER = 0b10000;
 
         public static boolean hasOption(int target, int option) {
             return ~(target | ~option) == 0;

@@ -1,9 +1,10 @@
 package com.cegesoft.prepa;
 
+import com.cegesoft.prepa.godfather.GFGroup;
 import com.cegesoft.prepa.percent.TenPercent;
 import com.cegesoft.prepa.quote.Quote;
 import com.cegesoft.prepa.rank.InfoGathering;
-import com.cegesoft.prepa.rank.RankManager;
+import com.cegesoft.prepa.rank.InfoGatheringManager;
 import com.cegesoft.prepa.server.Server;
 import com.cegesoft.prepa.time.TimeTask;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -20,6 +21,10 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -326,19 +331,153 @@ public class BaseListener extends ListenerAdapter {
                 event.reply(":heart:").queue();
             }
         }
+
+        if (event.getCommandIdLong() == Main.commandHandler.getGodfatherCommand().getIdLong() && event.getSubcommandName() != null) {
+            if (!Server.Options.hasOption(server.getOptions(), Server.Options.GODFATHER))
+                return;
+            switch (event.getSubcommandName()) {
+                case "ajouter_groupe":
+                    String godfathers = null;
+                    for (OptionMapping option : event.getOptions()) {
+                        if (option.getName().equals("parrains")) {
+                            godfathers = option.getAsString();
+                        }
+                    }
+                    if (godfathers == null) {
+                        event.reply("Veuillez remplir tous les paramètres").setEphemeral(true).queue();
+                        return;
+                    }
+                    if (!godfathers.contains(";")) {
+                        event.reply("Les groupes doivent compter au moins deux parrains !").setEphemeral(true).queue();
+                        return;
+                    }
+                    event.deferReply(true).queue();
+                    String[] gfSplit = godfathers.split(";");
+                    for (String gf : gfSplit) {
+                        if (server.getGodFatherManager().getGodFatherHandler().getByGF(gf).isPresent()) {
+                            event.getHook().editOriginal("Le parrain " + gf + " est déjà dans un groupe !").queue();
+                            return;
+                        }
+                    }
+                    GFGroup group = new GFGroup();
+                    for (String parrain : gfSplit) {
+                        group.addGodFather(parrain);
+                    }
+                    server.getGodFatherManager().getGodFatherHandler().addGroup(group);
+                    event.getHook().editOriginal("Groupe ajouté ! Utilisez /info pour consulter l'état du groupe !").queue();
+                    break;
+                case "info":
+                    String godfather = null;
+                    for (OptionMapping option : event.getOptions()) {
+                        if (option.getName().equals("parrain")) {
+                            godfather = option.getAsString();
+                        }
+                    }
+                    if (godfather == null) {
+                        event.reply("Veuillez remplir tous les paramètres").setEphemeral(true).queue();
+                        return;
+                    }
+                    Optional<GFGroup> groupOptional = server.getGodFatherManager().getGodFatherHandler().getByGF(godfather);
+                    if (!groupOptional.isPresent()) {
+                        event.reply("Le parrain " + godfather + " n'est pas dans un groupe !").setEphemeral(true).queue();
+                        return;
+                    }
+                    event.reply(groupOptional.get().format()).setEphemeral(true).queue();
+                    break;
+                case "supp_groupe":
+                    String godfather2 = null;
+                    for (OptionMapping option : event.getOptions()) {
+                        if (option.getName().equals("parrain")) {
+                            godfather2 = option.getAsString();
+                        }
+                    }
+                    if (godfather2 == null) {
+                        event.reply("Veuillez remplir tous les paramètres").setEphemeral(true).queue();
+                        return;
+                    }
+                    Optional<GFGroup> groupOptional2 = server.getGodFatherManager().getGodFatherHandler().getByGF(godfather2);
+                    if (!groupOptional2.isPresent()) {
+                        event.reply("Le parrain " + godfather2 + " n'est pas dans un groupe !").setEphemeral(true).queue();
+                        return;
+                    }
+                    server.getGodFatherManager().getGodFatherHandler().removeGroup(groupOptional2.get());
+                    event.reply("Groupe supprimé !").setEphemeral(true).queue();
+                    break;
+                case "ajouter_filleul":
+                    String godSons = null;
+                    String godFather = null;
+                    for (OptionMapping option : event.getOptions()) {
+                        if (option.getName().equals("filleuls")) {
+                            godSons = option.getAsString();
+                        } else if (option.getName().equals("parrain")) {
+                            godFather = option.getAsString();
+                        }
+                    }
+                    if (godSons == null || godFather == null) {
+                        event.reply("Veuillez remplir tous les paramètres").setEphemeral(true).queue();
+                        return;
+                    }
+
+                    event.deferReply(true).queue();
+                    String[] gsSplit = godSons.split(";");
+                    for (String gs : gsSplit) {
+                        if (server.getGodFatherManager().getGodFatherHandler().getByGS(gs).isPresent()) {
+                            event.getHook().editOriginal("Le filleul " + gs + " est déjà dans un groupe !").queue();
+                            return;
+                        }
+                    }
+                    Optional<GFGroup> groupOptional3 = server.getGodFatherManager().getGodFatherHandler().getByGF(godFather);
+                    if (!groupOptional3.isPresent()) {
+                        event.getHook().editOriginal("Le parrain " + godFather + " n'est pas dans un groupe !").queue();
+                        return;
+                    }
+                    GFGroup group2 = groupOptional3.get();
+                    for (String filleul : gsSplit) {
+                        group2.addGodSon(filleul);
+                    }
+                    server.getGodFatherManager().getGodFatherHandler().saveGroups();
+                    event.getHook().editOriginal("Filleuls ajoutés ! Utilisez /info pour consulter l'état du groupe !").queue();
+                    break;
+            }
+        }
+        if (event.getCommandIdLong() == Main.commandHandler.getGodfatherAdminCommand().getIdLong()) {
+            if (!Server.Options.hasOption(server.getOptions(), Server.Options.GODFATHER))
+                return;
+            if (event.getUser().getIdLong() != server.getAdminId()) {
+                event.reply("Vous n'avez pas la permission d'utiliser cette commande !").setEphemeral(true).queue();
+                return;
+            }
+            event.deferReply(true).queue();
+            StringBuilder builder = new StringBuilder();
+            for (GFGroup group : server.getGodFatherManager().getGodFatherHandler().getGroups()) {
+                builder.append(group.formatCSV()).append("\n");
+            }
+            File file = new File("_" + server.getId(), "godfather" + UUID.randomUUID() + ".csv");
+            try {
+                file.createNewFile();
+                BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+                writer.write(builder.toString());
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                event.getHook().editOriginal("Erreur lors de la création du fichier !").queue();
+                return;
+            }
+            event.getHook().editOriginal("Fichier créé ! " + file.getName()).queue();
+        }
     }
 
     @Override
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
         Server server = Main.getServer(event.getGuild().getId());
-        if (server == null)
+        if (server == null || !Server.Options.hasOption(server.getOptions(), Server.Options.RANKS))
             return;
         server.getRankManager().startNewGathering(event.getUser());
     }
 
     @Override
     public void onButtonClick(@NotNull ButtonClickEvent event) {
-        InfoGathering info = RankManager.getCurrent(event.getUser().getIdLong());
+        InfoGathering info = InfoGatheringManager.getCurrent(event.getUser().getIdLong());
         if (info == null || event.getButton() == null)
             return;
         if (event.getChannel().equals(info.getChannel()) && info.getCurrentQuestion().selectAnswer(event.getButton().getId(), event.getButton().getLabel())) {
@@ -348,7 +487,7 @@ public class BaseListener extends ListenerAdapter {
 
     @Override
     public void onPrivateMessageReceived(@NotNull PrivateMessageReceivedEvent event) {
-        InfoGathering info = RankManager.getCurrent(event.getAuthor().getIdLong());
+        InfoGathering info = InfoGatheringManager.getCurrent(event.getAuthor().getIdLong());
         if (info == null)
             return;
         if (event.getChannel().equals(info.getChannel()) && info.getCurrentQuestion().selectAnswer("message", event.getMessage().getContentRaw())) {
